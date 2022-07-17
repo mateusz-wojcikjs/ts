@@ -1,9 +1,9 @@
 // Intersection
-const person: {name: string} & {age: number} = {
+const persone: {name: string} & {age: number} = {
     name: "janusz",
     age: 44,
 };
-console.log(person);
+console.log(persone);
 
 // Union
 const car: {brand: string} | null =  {

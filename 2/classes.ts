@@ -1,4 +1,4 @@
-class Person {
+class PersonX {
     // constructor(private readonly msg: string) {}
     constructor(private msg: string) {}
     // msg: string;
@@ -8,7 +8,7 @@ class Person {
     }
 }
 
-const tom = new Person("Czołem!");
+const tom = new PersonX("Czołem!");
 // tom.msg = 'Czołem';
 
 tom.speak();
