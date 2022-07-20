@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useReducer, useState} from 'react';
 import './App.css';
 import Greeting from "./GreetingFunctional";
 import ListCreator, {ListItem} from "./ListCreator";
+import DisplayText from "./DisplayText";
 
 const reducer = (state: any, action: any) => {
   console.log("enteredNameReducer");
@@ -25,6 +26,18 @@ function App() {
   const [{message, enteredName}, dispatch] = useReducer(reducer, initState);
   const [starCount, setStarCount] = useState(0);
   const [count, setCount] = useState(0);
+
+  const getUserFullName = async (username: string): Promise<string> => {
+    const usersResponse = await fetch('https://jsonplaceholder.typicode.com/users');
+    if(usersResponse.ok) {
+      const users = await usersResponse.json();
+      const userByName = users.find((usr: any) => {
+        return usr.username.toLowerCase() === username;
+      });
+      return userByName.name;
+    }
+    return "";
+  }
 
   const setCountCallback = useCallback(
       () => {
@@ -70,6 +83,7 @@ function App() {
         <div>
           <ListCreator listItems={listItems} />
         </div>
+        <DisplayText getUserFullName={getUserFullName} />
       </header>
     </div>
   );
