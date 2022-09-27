@@ -5,8 +5,10 @@ if (true) {
 
 function go() {
     var val2 = 2;
+    console.log(this)
 }
 
+go();
 console.log(val1);
 // console.log(val2);
 // console.log(val3);
