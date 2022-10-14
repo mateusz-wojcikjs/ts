@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
 import {User} from "./User";
-import {isPasswordValid} from "../common/PasswordValidator";
-import {isEmailValid} from "../common/EmailValidator";
+import {isPasswordValid} from "../common/passwordValidator";
+import {isEmailValid} from "../common/emailValidator";
+import {incorrectCredentials} from "../common/incorrectCredentials";
 
 const saltRounds = 10;
 
@@ -39,6 +40,35 @@ export const register = async (
     userEntity.password = "";
     return {
         user: userEntity,
+    };
+}
+
+export const login = async (userName: string, password: string):Promise<UserResult> => {
+
+    const user = await User.findOne({
+        where: { userName },
+    });
+
+    if (!user) {
+        return {
+            messages: [incorrectCredentials()],
+        };
     }
 
+    const passwordMatch = await bcrypt.compare(password, user?.password);
+    if (!passwordMatch) {
+        return {
+            messages: [incorrectCredentials()],
+        };
+    }
+
+    if (!user.confirmed) {
+        return {
+            messages: ["Konto użytkownika nie zostało jeszcze aktywowane."],
+        };
+    }
+
+    return {
+        user,
+    }
 }

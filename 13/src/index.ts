@@ -4,11 +4,12 @@ import connectRedis from "connect-redis";
 import Redis from "ioredis";
 import bodyParser from "body-parser";
 import { DataSource } from "typeorm";
-import {register} from "./repo/UserRepo";
+import {login, register} from "./repo/UserRepo";
+import {createThread, getThreadsByCategoryId} from "./repo/ThreadRepo";
 
 declare module "express-session" {
     interface Session {
-        userid: any;
+        userId: any;
         loadedCount: Number;
     }
 }
@@ -56,14 +57,14 @@ const main = async () => {
 
     app.use(router);
     router.get("/", (req, res, next) => {
-        if (!req.session!.userid) {
-            req.session!.userid = req.query.userid;
-            console.log("określono userid!");
+        if (!req.session!.userId) {
+            req.session!.userId = req.query.userId;
+            console.log("określono userId!");
             req.session!.loadedCount = 0;
         } else {
             req.session!.loadedCount = Number(req.session.loadedCount) + 1;
         }
-        res.send(`userid: ${req.session!.userid}, loadedCount: ${req.session!.loadedCount}`)
+        res.send(`userId: ${req.session!.userId}, loadedCount: ${req.session!.loadedCount}`)
     });
     app.post("/register", async (req, res, next) => {
         try {
@@ -80,6 +81,87 @@ const main = async () => {
                 res.send(userResult.messages[0]);
             } else {
                 next();
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                res.send(error.message);
+            } else {
+                console.error('Unexpected error', error);
+            }
+        }
+    });
+
+    router.post("/login", async (req, res, next) => {
+       try {
+           console.log("params", req.body);
+           const userResult = await login(req.body.userName, req.body.password);
+           if (userResult && userResult.user?.id) {
+               req.session!.userId = userResult.user?.id;
+               res.send(`Użytkownik się zalogował, userId: ${req.session!.userId}`);
+           } else if (userResult && userResult.messages) {
+               res.send(userResult.messages[0]);
+           } else {
+               next();
+           }
+       } catch (error) {
+           if (error instanceof Error) {
+               res.send(error.message);
+           } else {
+               console.error('Unexpected error', error);
+           }
+       }
+    });
+
+    router.post("/logout", async (req, res) => {
+       try {
+           const user = req.session!.userId;
+           if (user) {
+            req.session!.userId = null;
+            res.send("Wylogowano")
+
+           }
+           if(!user) res.send("Nie wylogowano.");
+
+       } catch (error) {
+           if (error instanceof Error) {
+               res.send(error.message);
+           } else {
+               console.error('Unexpected error', error);
+           }
+       }
+    });
+
+    router.post("/createthread", async (req, res, next) => {
+        try {
+            console.log("userId", req.session);
+            console.log("body", req.body);
+            const msg = await createThread(
+                req.session!.userId,
+                req.body.categoryId,
+                req.body.title,
+                req.body.body,
+            );
+            res.send(msg);
+        } catch (error) {
+            if (error instanceof Error) {
+                res.send(error.message);
+            } else {
+                console.error('Unexpected error', error);
+            }
+        }
+    });
+
+    app.post("/threadsbycategory", async (req, res, next) => {
+        try {
+            const threadResult = await getThreadsByCategoryId(req.body.categoryId);
+            if (threadResult && threadResult.entities) {
+                let items = "";
+                threadResult.entities.forEach(th => {
+                    items += th.title + ", ";
+                });
+                res.send(items);
+            } else if (threadResult && threadResult.messages) {
+                res.send(threadResult.messages[0]);
             }
         } catch (error) {
             if (error instanceof Error) {
