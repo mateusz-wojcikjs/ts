@@ -22,11 +22,11 @@ export const createThreadItem = async (
         };
     }
     const user = await User.findOne({
-        where: {id: userId,},
+        where: {id: userId},
     });
 
     const thread = await Thread.findOne({
-        where: {id: threadId,},
+        where: {id: threadId},
     });
     if (!thread) {
         return {

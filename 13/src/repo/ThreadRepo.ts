@@ -85,12 +85,34 @@ export const getThreadsByCategoryId = async (
     const threads = await Thread.createQueryBuilder("thread")
         .where(`thread."categoryId" = :categoryId`, { categoryId })
         .leftJoinAndSelect("thread.category", "category")
+        .leftJoinAndSelect("thread.threadItems", "threadItems")
         .orderBy("thread.createdOn", "DESC")
         .getMany();
 
     if (!threads || threads.length === 0) return {
         messages: ["Nie udało się znaleźć wątków w podanej kategorii."],
     };
+    console.log(threads);
+    return {
+        entities: threads,
+    };
+};
+
+
+export const getThreadsLatest = async (): Promise<QueryArrayResults<Thread>> => {
+    const threads = await Thread.createQueryBuilder("thread")
+        .leftJoinAndSelect("thread.category", "category")
+        .leftJoinAndSelect("thread.user", "user")
+        .leftJoinAndSelect("thread.threadItems", "threadItems")
+        .orderBy("thread.createdOn", "DESC")
+        .take(10)
+        .getMany();
+
+    if (!threads || threads.length === 0) {
+        return {
+            messages: ["Nie znaleziono żadnych wątków."],
+        };
+    }
     console.log(threads);
     return {
         entities: threads,

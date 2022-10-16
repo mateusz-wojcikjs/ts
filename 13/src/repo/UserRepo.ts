@@ -5,10 +5,12 @@ import {isEmailValid} from "../common/emailValidator";
 import {incorrectCredentials} from "../common/incorrectCredentials";
 
 const saltRounds = 10;
+const userNotFound = (userName: string) => {
+    return `Nie udało się znaleźć użytkownika o nazwie "${userName}".`;
+}
 
 export class UserResult {
-    constructor(public messages?: Array<string>, public user?: User) {
-    }
+    constructor(public messages?: Array<string>, public user?: User) {}
 }
 
 export const register = async (
@@ -71,4 +73,39 @@ export const login = async (userName: string, password: string):Promise<UserResu
     return {
         user,
     }
+}
+
+export const logout = async (userName: string): Promise<string> => {
+    const user = await User.findOne({
+        where: { userName },
+    });
+
+    if (!user) {
+        return userNotFound(userName);
+    }
+
+    return "Użytkownik został wylogowany.";
+};
+
+export const me = async (id: string): Promise<UserResult> => {
+    const user = await User.findOne({
+        where: { id },
+        relations: [ "threads", "threads.threadItems" ]
+    });
+
+    if (!user) {
+        return {
+            messages: ["Nie znaleziono użytkownika."],
+        }
+    }
+
+    if (!user.confirmed) {
+        return {
+            messages: ["Użytkownik nie potwierdził jeszcze swojego adersu e-mail."],
+        }
+    }
+    user.password = "";
+    return {
+        user: user
+    };
 }
