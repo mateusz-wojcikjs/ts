@@ -117,6 +117,7 @@ const typeDefs = gql`
             password: String!
         ): String!
         logout(userName: String!): String!
+        changePassword(newPassword: String!): String!
     }
  `;
 

@@ -6,20 +6,40 @@ import Thread from "./components/routes/thread/Thread";
 import UserProfile from "./components/routes/userProfile/UserProfile";
 import {useDispatch} from "react-redux";
 import {UserProfileSetType} from "./store/user/Reducer";
+import {gql, useQuery} from "@apollo/client";
+import {ThreadCategoriesType} from "./store/category/Reducer";
+import {useRefreshReduxMe} from "./hooks/useRefreshReduxMe";
+
+const GetAllCategories = gql`
+    query getAllCategories {
+        getAllCategories {
+            id
+            name
+        }
+    }
+`;
 
 function App() {
+    const { data: categoriesData } = useQuery(GetAllCategories);
+    const { execMe, updateMe } = useRefreshReduxMe();
     const dispatch = useDispatch();
 
     useEffect(() => {
-        // todo: replace with GraphQL call
-        dispatch({
-            type: UserProfileSetType,
-            payload: {
-                id: 1,
-                userName: "użytkownikTestowy",
-            },
-        });
-    }, [dispatch]);
+        execMe();
+    }, [execMe]);
+
+    useEffect(() => {
+        updateMe();
+    }, [updateMe]);
+
+    useEffect(() => {
+        if (categoriesData && categoriesData.getAllCategories) {
+            dispatch({
+                type: ThreadCategoriesType,
+                payload: categoriesData.getAllCategories,
+            });
+        }
+    }, [dispatch, categoriesData]);
   return (
       <Routes>
           <Route path="/" element={<Home />} />

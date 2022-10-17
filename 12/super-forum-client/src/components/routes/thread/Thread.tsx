@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useReducer, useState} from "react";
 import { useParams } from "react-router-dom";
 import "./Thread.css";
 import ThreadHeader from "./ThreadHeader";
@@ -10,10 +10,19 @@ import ThreadCategory from "./ThreadCategory";
 import ThreadBody from "./ThreadBody";
 import ThreadResponsesBuilder from "./ThreadResponsesBuilder";
 import ThreadPointsBar from "../../ThreadPointsBar";
+import Category from "../../../models/Category";
+import {threadReducer} from "../../../reducers/ThreadReducer";
 
 const Thread = () => {
     const [thread, setThread] = useState<ThreadModel | undefined>();
     const { id } : any = useParams();
+    const [{ userId, category, title, bodyNode },threadReducerDispatch] = useReducer(threadReducer, {
+        userId: "0",
+        category: undefined,
+        title: "",
+        body: "",
+        bodyNode: undefined,
+    })
 
     useEffect(() => {
         console.log("Id wątku", id);
@@ -23,6 +32,13 @@ const Thread = () => {
             });
         }
     }, [id]);
+
+    const receiveSelectedCategory = (cat: Category) => {
+        threadReducerDispatch({
+            type: "category",
+            payload: cat,
+        });
+    };
 
     return (
         <div className="screen-root-container">
@@ -36,7 +52,8 @@ const Thread = () => {
                         lastModifiedOn={thread ? thread.lastModifiedOn : new Date().getDate()}
                         title={thread?.title}
                     />
-                    <ThreadCategory categoryName={thread?.category?.name} />
+                    <ThreadCategory category={thread ? thread.category : category}
+                                    sendOutSelectedCategory={receiveSelectedCategory} />
                     <ThreadTitle title={thread?.title} />
                     <ThreadBody body={thread?.body} />
                 </div>

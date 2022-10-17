@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { getCategories } from "../../services/DataService";
-import Category from "../../models/Category";
 import "./LeftMenu.css";
 import {useWindowDimensions} from "../../hooks/WindowDimensions";
 import {gql, useQuery} from "@apollo/client";

@@ -5,8 +5,23 @@ import {ModalProps} from "../types/ModalProps";
 import {allowSubmit} from "../../Helpers/auth";
 import {useDispatch} from "react-redux";
 import {UserProfileSetType} from "../../store/user/Reducer";
+import User from "../../models/User";
+import {gql, useMutation} from "@apollo/client";
+import {Me, useRefreshReduxMe} from "../../hooks/useRefreshReduxMe";
+
+const LoginMutation = gql`
+    mutation Login($userName: String!, $password: String!) {
+        login(userName: $userName, password: $password)
+    }
+`;
+
 
 const Login: FC<ModalProps> = ({ isOpen, onClickToggle }) => {
+    const [execLogin] = useMutation(LoginMutation, {
+        refetchQueries: [
+            {query: Me}
+        ]
+    })
     const [{ userName, password, resultMsg, isSubmitDisabled }, dispatch] = useReducer(userReducer, {
         userName: "",
         password: "",
@@ -14,17 +29,7 @@ const Login: FC<ModalProps> = ({ isOpen, onClickToggle }) => {
         isSubmitDisabled: true,
     });
 
-    const profileDispatch = useDispatch();
-    useEffect(() => {
-        profileDispatch({
-            type: UserProfileSetType,
-            payload: {
-                id: 1,
-                userName: "testUser"
-            },
-        });
-    }, [profileDispatch]);
-
+    const { execMe, updateMe } = useRefreshReduxMe();
 
     const onChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {
         dispatch({ type: "userName", payload: e.target.value });
@@ -40,10 +45,29 @@ const Login: FC<ModalProps> = ({ isOpen, onClickToggle }) => {
         else allowSubmit(dispatch, "", false);
     };
 
-    const onClickLogin = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    const onClickLogin = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault();
         onClickToggle(e);
+        const result = await execLogin({
+            variables: {
+                userName,
+                password,
+            },
+        });
+        execMe();
+        updateMe();
     };
+
+    const profileDispatch = useDispatch();
+    useEffect(() => {
+        profileDispatch({
+            type: User,
+            payload: {
+                id: 1,
+                userName: "testUser"
+            },
+        });
+    }, [profileDispatch]);
 
     const onClickCancel = (
         e: React.MouseEvent<HTMLButtonElement, MouseEvent>

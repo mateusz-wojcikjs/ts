@@ -90,7 +90,7 @@ export const logout = async (userName: string): Promise<string> => {
 export const me = async (id: string): Promise<UserResult> => {
     const user = await User.findOne({
         where: { id },
-        relations: [ "threads", "threads.threadItems" ]
+        relations: [ "threads", "threads.threadItems", "threadItems", "threadItems.thread" ],
     });
 
     if (!user) {
@@ -109,3 +109,26 @@ export const me = async (id: string): Promise<UserResult> => {
         user: user
     };
 }
+
+export const changePassword = async (
+    id: string,
+    newPassword: string
+): Promise<string> => {
+    const user = await User.findOne({
+        where: { id },
+    });
+
+    if (!user) {
+        return "Nie znaleziono użytkownika.";
+    }
+
+    if (!user.confirmed) {
+        return "Użytkownik jeszcze nie potwierdził swojego adresu e-mail.";
+    }
+
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    user.save();
+    return "Hasło zostało prawidłowo zmienione.";
+};

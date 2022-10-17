@@ -6,7 +6,7 @@ import {ThreadItem} from "../repo/ThreadItem";
 import {createThreadItem, getThreadItemsByThreadId} from "../repo/ThreadItemRepo";
 import {updateThreadPoint} from "../repo/ThreadPointRepo";
 import {updateThreadItemPoint} from "../repo/ThreadItemPointRepo";
-import {login, logout, me, register, UserResult} from "../repo/UserRepo";
+import {changePassword, login, logout, me, register, UserResult} from "../repo/UserRepo";
 import {User} from "../repo/User";
 import {ThreadCategory} from "../repo/ThreadCategory";
 import {getAllCategories} from "../repo/ThreadCategoryRepo";
@@ -329,6 +329,26 @@ const resolvers = {
                 throw ex;
             }
 
+        },
+        changePassword: async (
+            obj: any,
+            args: { newPassword: string },
+            ctx: GqlContext,
+            info: any
+        ): Promise<string> => {
+            try {
+                if (!ctx.req.session || !ctx.req.session!.userId) {
+                    return "Aby zmienić hasło, musisz się najpierw zalogować.";
+                }
+                let result = await changePassword(
+                    ctx.req.session!.userId,
+                    args.newPassword
+                );
+
+                return result;
+            } catch (ex) {
+                throw ex;
+            }
         },
     }
 };
